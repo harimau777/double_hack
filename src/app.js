@@ -62,17 +62,23 @@ var buses = function(callback){
 
 // stopID is the id  from stops() and routeID routes(). 
 // Callback will be given a number with the ETA, -1 if there is none or an error when proforming the request
-//! TODO test working when a bus is actually running
+//! If more than one bus it will show the lowest time
 var eta = function(stopID, routeID, callback){
   xhrRequest(baseUrl + '/eta?stop=' + stopID, 'GET',
     function(data){
       data = JSON.parse(data);
+      var byRouteID = {};
       data.etas[stopID].etas.forEach(function(element, index){
-        if (element.route == routeID){
-          callback(element.avg);
+        if(element.route in byRouteID){
+          // Current one is larger than one wanting to put in
+          if(byRouteID[element.route].avg > element.avg){
+            byRouteID[element.route] = element;
+          }
+        }else{
+          byRouteID[element.route] = element;
         }
       });
-      callback(-1); 
+      callback(byRouteID[routeID] ? byRouteID[routeID].avg : -1);
     }
   );
 };
@@ -153,8 +159,9 @@ Pebble.addEventListener('appmessage',
 });
 
 // Testing
-closestStops(37, function(data){
-  console.log(data);
-  var textData = data.map(function(item){return item.name;}).join('\n');
-  console.log(textData);
+closestStops(45, function(data){
+  console.log(data[1].id);
+  eta(data[1].id, 45, function(eta){
+    console.log(eta);
+  });
 });
