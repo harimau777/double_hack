@@ -1,25 +1,27 @@
 
 var baseUrl = 'https://uc.doublemap.com/map/v2';
+// Borrowed from https://github.com/pebble-examples/watchface-tutorial/blob/master/src/js/pebble-js-app.js
+var xhrRequest = function (url, type, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.onload = function () {
+    callback(this.responseText);
+  };
+  xhr.open(type, url);
+  xhr.send();
+};
 
 // What the hell is with callbacks anyway
-// Argument is function that takes the dict' if successful, otherwise empty
+// Argument is function that takes the dict' if successful
 // argument is indexed by id
 var routes = function(callback){
-  ajax(
-    {
-      url: baseUrl + '/routes',
-      type: 'json'
-    },
+  xhrRequest(baseUrl + '/routes', 'GET',
     function(data){
+      data = JSON.parse(data);
       var routes = {};
       data.forEach(function(element, index){
         routes[element.id] = element;
       });
       callback(routes);
-    },
-    function(error){
-      console.log('There was an error when getting routes: ' + error);
-      callback({});
     }
   );
 };
@@ -27,21 +29,14 @@ var routes = function(callback){
 // Argument is function that takes the dict' if successful, otherwise empty
 // Argument is indexed by id (starts at 1, not array)
 var stops = function(callback){
-  ajax(
-    {
-      url: baseUrl + '/stops',
-      type: 'json'
-    },
+  xhrRequest(baseUrl + '/stops', 'GET',
     function(data){
+      data = JSON.parse(data);
       var stops = {};
       data.forEach(function(element, index){
         stops[element.id] = element;
       });
       callback(stops);
-    },
-    function(error){
-      console.log('There was an error when getting stops: ' + error);
-      callback({});
     }
   );
 };
@@ -49,11 +44,9 @@ var stops = function(callback){
 // Argument is function that takes the dict' if successful, otherwise empty
 // argument is indexed by id
 var buses = function(callback){
-  ajax({
-    url: baseUrl + '/buses',
-    type: 'json'
-    },
+  xhrRequest(baseUrl + '/buses', 'GET',
     function(data){
+      data = JSON.parse(data);
       var buses = {};
       data.forEach(function(element, index){
         buses[element.id] = element;
@@ -71,22 +64,16 @@ var buses = function(callback){
 // Callback will be given a number with the ETA, -1 if there is none or an error when proforming the request
 //! TODO test working when a bus is actually running
 var eta = function(stopID, routeID, callback){
-  ajax({
-    url: baseUrl + '/eta?stop=' + stopID,
-    type: 'json'
-  },
+  xhrRequest(baseUrl + '/eta?stop=' + stopID, 'GET',
     function(data){
+      data = JSON.parse(data);
       data.etas[stopID].etas.forEach(function(element, index){
         if (element.route == routeID){
           callback(element.avg);
         }
       });
-      callback(-1);
-  },
-    function(error){
-      console.log('There was an error when getting the eta: ', error);
-      callback(-1);
-    }  
+      callback(-1); 
+    }
   );
 };
 var distance = function(x1, y1, x2, y2){
@@ -130,8 +117,8 @@ var closestStops = function(routeID, callback){
   });
 };
 
+// Testing
 closestStops(37, function(data){
   var textData = data.map(function(item){return item.name;}).join('\n');
   console.log(textData);
-  simply.text({ title: 'stops', body: textData });
 });
