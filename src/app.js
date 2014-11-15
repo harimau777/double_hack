@@ -124,26 +124,33 @@ Pebble.addEventListener('appmessage',
       // 0: function -> [routes, stops, eta]
       // 1: routeID (-1 if none)
       // 2: step ID (-1 if none)
-      //! Send value to identify 
+      //! Send value to identify which choice it is
+      //! Do these functions even work from the C side? 
       function(event){
         switch(event.payload[0]){
           case 0:
             routes(function(routes){
-              Pebble.sendAppMessage(routes.map(function(element){ return element.name; }),
-                function(working){
-                   // Nothing really needs done
-              },
-                function(failure){
-                  // Other stuff isn't so cool
-              });
+              Pebble.sendAppMessage(routes.map(function(element){ return element.name; }), function(working){}, function(failure){});
             });
             break;
           case 1:
+            stops(function(stops){
+              routes(function(routes){
+                var stopsOnRoute = routes[event.payload[1]].stops;
+                var result = {};
+                stopsOnRoute.forEach(function(stopID, index){
+                  result[stopID] = stops[stopID].name;
+                });
+                Pebble.sendAppMessage(result, function(working){}, function(failure){});
+              });
+            });
             break;
           case 2:
-            break;
+            eta(event.payload[2], event.payload[1], function(eta){
+              Pebble.sendAppMessage(eta, function(working){}, function(failure){});
+            });
         }
-      });
+});
 
 // Testing
 closestStops(37, function(data){
