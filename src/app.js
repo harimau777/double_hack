@@ -117,8 +117,37 @@ var closestStops = function(routeID, callback){
   });
 };
 
+// Assumes all valus are not negative currently
+Pebble.addEventListener('appmessage',
+      // Event data
+      //
+      // 0: function -> [routes, stops, eta]
+      // 1: routeID (-1 if none)
+      // 2: step ID (-1 if none)
+      //! Send value to identify 
+      function(event){
+        switch(event.payload[0]){
+          case 0:
+            routes(function(routes){
+              Pebble.sendAppMessage(routes.map(function(element){ return element.name; }),
+                function(working){
+                   // Nothing really needs done
+              },
+                function(failure){
+                  // Other stuff isn't so cool
+              });
+            });
+            break;
+          case 1:
+            break;
+          case 2:
+            break;
+        }
+      });
+
 // Testing
 closestStops(37, function(data){
+  console.log(data);
   var textData = data.map(function(item){return item.name;}).join('\n');
   console.log(textData);
 });
