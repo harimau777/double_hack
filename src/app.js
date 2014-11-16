@@ -107,7 +107,7 @@ var closestStops = function(routeID, callback){
             if (a[1] > b[1]){
               return 1;
             }else if (a[1] < b[1]){
-              return -1;
+              return -1;  
             }else{
               return 0;
             }
@@ -158,10 +158,80 @@ Pebble.addEventListener('appmessage',
         }
 });
 
-// Testing
-closestStops(45, function(data){
-  console.log(data[1].id);
-  eta(data[1].id, 45, function(eta){
-    console.log(eta);
+
+var UI = require('ui');
+
+// Callback is given menu for the routes
+var routesMenu = function(callback){
+  routes(function(routeData){
+    var menuData = [];
+    var keys = Object.keys(routeData);
+    for(var i = 0; i < keys.length; i++){
+      menuData.push({ title: routeData[keys[i]].name });
+    }
+    var menu = new UI.Menu({
+      sections: [{
+        title: 'routes',
+        items: menuData
+      }]
+    });
+     callback(menu);
+  });
+};
+
+
+var stopsMenu = function(routeID, callback){
+  closestStops(routeID, function(stopData){
+    var menuData = [];
+    for(var i = 0; i < stopData.length; i++){
+      menuData.push({ title: stopData[i].name });
+    }
+    var menu = new UI.Menu({
+      sections: [{
+        title: 'stops',
+        items: menuData
+      }]
+    });
+    callback(menu);
+  });
+};
+
+var displayETA = function(eta){
+  var menu = new UI.Card({
+    body: 'ETA:\n' + eta + ' mins'
+  });
+  menu.show();
+};
+
+//! Have long select pick closest location!
+routesMenu(function(menu){
+  menu.show();
+  menu.on('select', function(event){
+    routes(function(routeData){
+      var routeID;
+      var keys = Object.keys(routeData);
+      for(var i = 0; i < keys.length; i++){
+        if(routeData[keys[i]].name == event.item.title){
+          routeID = routeData[keys[i]].id;
+          break;
+        }
+      }
+      stopsMenu(routeID, function(stopMenu){
+        stopMenu.show();
+        stopMenu.on('select', function(stopEvent){
+          closestStops(routeID, function(closestStops){
+            var stopID;
+            for(var i = 0; i < closestStops.length; i++){
+              if(closestStops[i].name == stopEvent.item.title){
+                stopID = closestStops[i].id;
+                break;
+              }
+            }
+            eta(stopID, routeID, displayETA);
+          });
+        });
+      });
+    });
   });
 });
+
