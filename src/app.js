@@ -19,9 +19,7 @@ strap_api_init_accel(Accel, strap_params);
 strap_api_init(strap_params);
 
 
-
-strap_api_log('testing');
-
+var params = strap_api_clone(strap_params);
 
 
 
@@ -198,6 +196,12 @@ var displayETAFactory = function(stopID, stopName, routeID){
       subtitle: 'ETA:\n' + etaTime + ' mins'
     });
     menu.show();
+
+    //Strap Logging:
+    params.action_url = (routeID + "/" + stopName + "/" + etaTime).replace('&', 'and', 'g');
+    // strap_log_event(params);
+    strap_api_log(params);
+    
     menu.on('accelTap', function(event){
       eta(stopID, routeID, function(etaTime){
         if (etaTime == -1){
