@@ -9,4 +9,5 @@ Upcoming changes:
 * proper output for error codes on ETA call
 * minimal data transmission to watch
 * ability to change doublemap transport network from "uc.doublemap.com"
+* add custom graphic
 * push to publication
